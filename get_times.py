@@ -3,7 +3,7 @@ from datetime import datetime
 from utc_to_aest import UTCtoAEST
 from timefuncs import HHMM
 
-def getTimes(time):
+def getTimesData(time):
     url = 'https://transportnsw.info/api/trip/v1/departure-list-request'
     params = {
         'date': '20251001',
@@ -20,7 +20,14 @@ def getTimes(time):
     response = requests.get(url, params=params)
 
     if response.status_code == 200:
-        data = response.json()
+        return response.json()
+    else:
+        print('Failed to retrieve data. Status code:', response.status_code)
+        return None
+
+
+def cleanTimesData(data):
+    if data:
         del data['version']
 
         if 'locations' in data:
@@ -53,44 +60,53 @@ def getTimes(time):
                         stop_event[key] = UTCtoAEST(stop_event[key])
 
             data['stopEvents'] = stop_events
-
-            current_time = datetime.now()
-            next_bus = None
-            next_realtime_bus = None
-            min_time_diff = float('inf')
-            min_realtime_time_diff = float('inf')
-
-            for stop_event in stop_events:
-                dep_time_str = stop_event['departureTime']
-                dep_time = datetime.strptime(dep_time_str, '%Y/%m/%d %H:%M:%S')
-
-                time_diff = (dep_time - current_time).total_seconds()
-
-                if time_diff > 0:
-                    if time_diff < min_time_diff:
-                        min_time_diff = time_diff
-                        next_bus = stop_event
-
-                    if stop_event['realtimeStatus'] and time_diff < min_realtime_time_diff:
-                        min_realtime_time_diff = time_diff
-                        next_realtime_bus = stop_event
-
-            if next_bus:
-                next_bus_time = next_bus['departureTime']
-                next_bus_wait_time = divmod(min_time_diff, 60)
-                print(f"Next bus departs at {next_bus_time} (in {int(next_bus_wait_time[0])} minutes {int(next_bus_wait_time[1])} seconds).")
-
-            if next_realtime_bus:
-                next_realtime_bus_time = next_realtime_bus['departureTime']
-                next_realtime_bus_wait_time = divmod(min_realtime_time_diff, 60)
-                print(f"Next bus with real-time status departs at {next_realtime_bus_time} (in {int(next_realtime_bus_wait_time[0])} minutes {int(next_realtime_bus_wait_time[1])} seconds).")
-                print(f"Details of real-time bus: {next_realtime_bus}")
-            else:
-                print("No real-time bus available at this time.")
-        else:
-            print('stopEvents not found in the response.')
+        return data
     else:
-        print('Failed to retrieve data. Status code:', response.status_code)
+        print('No data to clean.')
+        return None
 
 
-getTimes(HHMM())
+def getNextBusTime(data):
+    if data and 'stopEvents' in data:
+        stop_events = data['stopEvents']
+        current_time = datetime.now()
+        next_bus = None
+        next_realtime_bus = None
+        min_time_diff = float('inf')
+        min_realtime_time_diff = float('inf')
+
+        for stop_event in stop_events:
+            dep_time_str = stop_event['departureTime']
+            dep_time = datetime.strptime(dep_time_str, '%Y/%m/%d %H:%M:%S')
+
+            time_diff = (dep_time - current_time).total_seconds()
+
+            if time_diff > 0:
+                if time_diff < min_time_diff:
+                    min_time_diff = time_diff
+                    next_bus = stop_event
+
+                if stop_event['realtimeStatus'] and time_diff < min_realtime_time_diff:
+                    min_realtime_time_diff = time_diff
+                    next_realtime_bus = stop_event
+
+        if next_bus:
+            next_bus_time = next_bus['departureTime']
+            next_bus_wait_time = divmod(min_time_diff, 60)
+            print(f"Next bus departs at {next_bus_time} (in {int(next_bus_wait_time[0])} minutes {int(next_bus_wait_time[1])} seconds).")
+
+        if next_realtime_bus:
+            next_realtime_bus_time = next_realtime_bus['departureTime']
+            next_realtime_bus_wait_time = divmod(min_realtime_time_diff, 60)
+            print(f"Next bus with real-time status departs at {next_realtime_bus_time} (in {int(next_realtime_bus_wait_time[0])} minutes {int(next_realtime_bus_wait_time[1])} seconds).")
+            print(f"Details of real-time bus: {next_realtime_bus}")
+        else:
+            print("No real-time bus available at this time.")
+    else:
+        print('No stop events found in the data.')
+
+
+data = getTimesData(HHMM())
+cleaned_data = cleanTimesData(data)
+getNextBusTime(cleaned_data)
+
