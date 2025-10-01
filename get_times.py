@@ -22,14 +22,14 @@ if response.status_code == 200:
         stop_events = data['stopEvents'][:15]
         
         for stop_event in stop_events:
-            unwanted_keys = ['isAccessible', 'transportation', 'location', 'id', 'alerts', 'isBookingRequired', 'onwardLocations', 'previousLocations', 'realtimeTripId', 'avmsTripId']
+            unwanted_keys = ['isCancelled', 'isAccessible', 'transportation', 'location', 'id', 'alerts', 'isBookingRequired', 'onwardLocations', 'previousLocations', 'realtimeTripId', 'avmsTripId', 'isHighFrequency']
             
             for key in unwanted_keys:
                 if key in stop_event:
                     del stop_event[key]
 
         data['stopEvents'] = stop_events
-        print('Cleaned Data with First 15 Stop Events:', data)
+        print(str(data).replace("'", '"'))
     else:
         print('stopEvents not found in the response.')
 else:
