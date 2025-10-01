@@ -3,7 +3,7 @@ from datetime import datetime
 from utc_to_aest import UTCtoAEST
 from timefuncs import HHMM
 
-def getTimesData(time):
+def getTimesData(time: str) -> dict:
     url = 'https://transportnsw.info/api/trip/v1/departure-list-request'
     params = {
         'date': '20251001',
@@ -23,10 +23,10 @@ def getTimesData(time):
         return response.json()
     else:
         print('Failed to retrieve data. Status code:', response.status_code)
-        return None
+        return {}
 
 
-def cleanTimesData(data):
+def cleanTimesData(data: dict) -> dict:
     if data:
         del data['version']
 
@@ -43,7 +43,7 @@ def cleanTimesData(data):
             stop_events = data['stopEvents'][:5]
             
             for stop_event in stop_events:
-                unwanted_keys = ['isCancelled', 'isAccessible', 'transportation', 'location', 'alerts', 'isBookingRequired', 'onwardLocations', 'previousLocations', 'realtimeTripId', 'avmsTripId', 'isHighFrequency']
+                unwanted_keys = ['isAccessible', 'transportation', 'location', 'alerts', 'isBookingRequired', 'onwardLocations', 'previousLocations', 'realtimeTripId', 'avmsTripId', 'isHighFrequency']
                 
                 for key in unwanted_keys:
                     if key in stop_event:
@@ -63,10 +63,10 @@ def cleanTimesData(data):
         return data
     else:
         print('No data to clean.')
-        return None
+        return {}
 
 
-def getNextBusTime(data):
+def getNextBusTime(data: dict) -> dict:
     if data and 'stopEvents' in data:
         stop_events = data['stopEvents']
         current_time = datetime.now()
@@ -108,7 +108,15 @@ def getNextBusTime(data):
         return {}
 
 
-def getDetailsData(id):
+def getID(bus: dict) -> str: 
+    if 'id' in bus:
+        return bus['id']
+    else:
+        print('No id found')
+        return str()
+
+
+def getDetailsData(id: str) -> dict:
     url = f'https://transportnsw.info/api/trip/v1/departure-detail-request/{id}'
 
     response = requests.get(url)
@@ -117,9 +125,32 @@ def getDetailsData(id):
         return response.json()
     else:
         print('Failed to retrieve data. Status code:', response.status_code)
-        return None
+        return {}
 
+
+def cleanDetailsData(data: dict) -> dict:
+    if 'stopEvent' in data:
+        unwanted_keys = ['realtimeTripId', 'avmsTripId', 'location', 'transportation', 'isAccessible', 'afterLocations']
+        for key in unwanted_keys:
+            if key in data['stopEvent']:
+                del data['stopEvent'][key]
+        if 'beforeLocations' in data['stopEvent']:
+            data['stopEvent']['beforeLocations'] = data['stopEvent']['beforeLocations'][-5:]
+            for location in data['stopEvent']['beforeLocations']:
+                unwanted_keys = ['id', 'isGlobalId', 'type', 'coord', 'parentId', 'isAccessible']
+                for key in unwanted_keys:
+                    if key in location:
+                        del location[key]
+        return data
+    else:
+        print('No stopEvent found in data')
+        return {}
+    
 data = getTimesData(HHMM())
 cleaned_data = cleanTimesData(data)
-getNextBusTime(cleaned_data)
+bus = getNextBusTime(cleaned_data)
+busID = getID(bus)
+details = getDetailsData(busID)
+clean_details = cleanDetailsData(details)
+print(clean_details)
 
