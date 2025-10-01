@@ -8,8 +8,10 @@ def UTCtoAEST(inp):
         UTC = pytz.utc.localize(UTC)
         AEST = UTC.astimezone(AESTzone)
         return AEST.strftime('%Y/%m/%d %H:%M:%S')
+    except ValueError as e:
+        return f"Error: Invalid timestamp format. Expected format: YYYY-MM-DDTHH:MM:SSZ. Details: {e}"
     except Exception as e:
-        return f"Error: ${e}"
+        return f"Error: {e}"
 
 if __name__ == "__main__":
     inp = input("Input a UTC timestamp: ")

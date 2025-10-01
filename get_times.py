@@ -12,9 +12,7 @@ def getTimes(time):
         'type': 'stop',
         'accessible': 'false'
     }
-
     response = requests.get(url, params=params)
-
     if response.status_code == 200:
         data = response.json()
         del data['version']
@@ -38,6 +36,10 @@ def getTimes(time):
                 for key in unwanted_keys:
                     if key in stop_event:
                         del stop_event[key]
+                if stop_event["realtimeStatus"] == None:
+                    stop_event["realtimeStatus"] = False
+                else:
+                    stop_event["realtimeStatus"] = True
 
             data['stopEvents'] = stop_events
             print(str(data).replace("'", '"'))
@@ -46,4 +48,4 @@ def getTimes(time):
     else:
         print('Failed to retrieve data. Status code:', response.status_code)
 
-getTimes('1722')
+getTimes('1730')
