@@ -134,6 +134,11 @@ def cleanDetailsData(data: dict) -> dict:
         for key in unwanted_keys:
             if key in data['stopEvent']:
                 del data['stopEvent'][key]
+        if 'duringLocations' in data['stopEvent']:
+            unwanted_keys = ['id', 'isGlobalId', 'type', 'coord', 'parentId', 'isAccessible']
+            for key in unwanted_keys:
+                if key in data['stopEvent']['duringLocations']:
+                    del data['stopEvent']['duringLocations'][key]
         if 'beforeLocations' in data['stopEvent']:
             data['stopEvent']['beforeLocations'] = data['stopEvent']['beforeLocations'][-5:]
             for location in data['stopEvent']['beforeLocations']:
