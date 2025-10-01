@@ -43,7 +43,7 @@ def cleanTimesData(data):
             stop_events = data['stopEvents'][:5]
             
             for stop_event in stop_events:
-                unwanted_keys = ['isCancelled', 'isAccessible', 'transportation', 'location', 'id', 'alerts', 'isBookingRequired', 'onwardLocations', 'previousLocations', 'realtimeTripId', 'avmsTripId', 'isHighFrequency']
+                unwanted_keys = ['isCancelled', 'isAccessible', 'transportation', 'location', 'alerts', 'isBookingRequired', 'onwardLocations', 'previousLocations', 'realtimeTripId', 'avmsTripId', 'isHighFrequency']
                 
                 for key in unwanted_keys:
                     if key in stop_event:
@@ -89,22 +89,35 @@ def getNextBusTime(data):
                 if stop_event['realtimeStatus'] and time_diff < min_realtime_time_diff:
                     min_realtime_time_diff = time_diff
                     next_realtime_bus = stop_event
-
-        if next_bus:
-            next_bus_time = next_bus['departureTime']
-            next_bus_wait_time = divmod(min_time_diff, 60)
-            print(f"Next bus departs at {next_bus_time} (in {int(next_bus_wait_time[0])} minutes {int(next_bus_wait_time[1])} seconds).")
-
         if next_realtime_bus:
             next_realtime_bus_time = next_realtime_bus['departureTime']
             next_realtime_bus_wait_time = divmod(min_realtime_time_diff, 60)
             print(f"Next bus with real-time status departs at {next_realtime_bus_time} (in {int(next_realtime_bus_wait_time[0])} minutes {int(next_realtime_bus_wait_time[1])} seconds).")
             print(f"Details of real-time bus: {next_realtime_bus}")
+            return next_realtime_bus
+        if next_bus:
+            next_bus_time = next_bus['departureTime']
+            next_bus_wait_time = divmod(min_time_diff, 60)
+            print(f"Next bus departs at {next_bus_time} (in {int(next_bus_wait_time[0])} minutes {int(next_bus_wait_time[1])} seconds).")
+            return next_bus
         else:
             print("No real-time bus available at this time.")
+            return {}
     else:
         print('No stop events found in the data.')
+        return {}
 
+
+def getDetailsData(id):
+    url = f'https://transportnsw.info/api/trip/v1/departure-detail-request/{id}'
+
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print('Failed to retrieve data. Status code:', response.status_code)
+        return None
 
 data = getTimesData(HHMM())
 cleaned_data = cleanTimesData(data)
