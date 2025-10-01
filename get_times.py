@@ -1,4 +1,5 @@
 import requests
+from datetime import datetime
 from utc_to_aest import UTCtoAEST
 
 def getTimes(time):
@@ -29,7 +30,7 @@ def getTimes(time):
             print('locations not found in the response.')
 
         if 'stopEvents' in data:
-            stop_events = data['stopEvents'][:15]
+            stop_events = data['stopEvents'][:5]
             
             for stop_event in stop_events:
                 unwanted_keys = ['isCancelled', 'isAccessible', 'transportation', 'location', 'id', 'alerts', 'isBookingRequired', 'onwardLocations', 'previousLocations', 'realtimeTripId', 'avmsTripId', 'isHighFrequency']
@@ -55,4 +56,5 @@ def getTimes(time):
     else:
         print('Failed to retrieve data. Status code:', response.status_code)
 
-getTimes('1732')
+HHMM = datetime.now().strftime('%H%M')
+getTimes(HHMM)
