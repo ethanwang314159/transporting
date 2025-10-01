@@ -1,6 +1,7 @@
 import requests
 from datetime import datetime
 from utc_to_aest import UTCtoAEST
+from timefuncs import HHMM
 
 def getTimes(time):
     url = 'https://transportnsw.info/api/trip/v1/departure-list-request'
@@ -56,5 +57,5 @@ def getTimes(time):
     else:
         print('Failed to retrieve data. Status code:', response.status_code)
 
-HHMM = datetime.now().strftime('%H%M')
-getTimes(HHMM)
+
+getTimes(HHMM())
