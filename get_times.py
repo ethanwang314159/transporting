@@ -1,4 +1,5 @@
 import requests
+from utc_to_aest import UTCtoAEST
 
 def getTimes(time):
     url = 'https://transportnsw.info/api/trip/v1/departure-list-request'
@@ -40,6 +41,12 @@ def getTimes(time):
                     stop_event["realtimeStatus"] = False
                 else:
                     stop_event["realtimeStatus"] = True
+                
+                utc_keys = ['departureTime', 'departureTimePlanned', 'departureTimeEstimated', 'arrivalTimeEstimated', 'arrivalTimePlanned']
+                for key in utc_keys:
+                    if key in stop_event:
+                        stop_event[key] = UTCtoAEST(stop_event[key])
+
 
             data['stopEvents'] = stop_events
             print(str(data).replace("'", '"'))
@@ -48,4 +55,4 @@ def getTimes(time):
     else:
         print('Failed to retrieve data. Status code:', response.status_code)
 
-getTimes('1730')
+getTimes('1732')
